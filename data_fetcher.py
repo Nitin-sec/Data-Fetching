@@ -5,7 +5,7 @@ Fetches messages from multiple Telegram groups within the last 6 hours
 
 import asyncio
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from telethon import TelegramClient
 from telethon.errors import SessionPasswordNeededError, FloodWaitError
 from telethon.tl.types import Channel, Chat
@@ -16,9 +16,10 @@ class TelegramGroupFetcher:
     def __init__(self):
         self.client = None
         # HARDCODED CREDENTIALS - Replace with your actual values
-        self.api_id = 21156764  # Replace with your actual API ID (integer)
-        self.api_hash = "510953159b9f7d3359fe7a70a5cbf566"  # Replace with your actual API Hash
-        self.phone = "+918178657157"  # Replace with your actual phone number (with country code)
+        self.api_id = 12345678  # Replace with your actual API ID
+        self.api_hash = "your_api_hash_here"  # Replace with your actual API Hash  
+        self.phone = "+1234567890"  # Replace with your actual phone number
+
         
     def get_credentials(self):
         """Validate hardcoded credentials"""
@@ -129,8 +130,7 @@ class TelegramGroupFetcher:
                     'sender_id': message.sender_id,
                     'text': message.text or '',
                     'media': bool(message.media),
-                    'forward_from': message.forward.original_fwd.from_id if message.forward else None,
-                    'group_name': group_name
+                    'forward_from': message.forward.original_fwd.from_id if message.forward else None
                 })
                 
                 # Add a small delay to avoid hitting rate limits
@@ -148,11 +148,11 @@ class TelegramGroupFetcher:
             print(f"Error fetching messages from '{group_name}': {e}")
             return []
     
-    def format_message_output(self, message):
+    def format_message_output(self, message, group_name):
         """Format a message for terminal output"""
         output = []
         output.append("=" * 80)
-        output.append(f"GROUP: {message['group_name']}")
+        output.append(f"GROUP: {group_name}")
         output.append(f"MESSAGE ID: {message['id']}")
         output.append(f"DATE: {message['date'].strftime('%Y-%m-%d %H:%M:%S UTC')}")
         output.append(f"SENDER ID: {message['sender_id']}")
@@ -201,8 +201,8 @@ class TelegramGroupFetcher:
             return
         
         try:
-            # Calculate time limit (6 hours ago) with UTC timezone
-            time_limit = datetime.now(timezone.utc) - timedelta(hours=6)
+            # Calculate time limit (6 hours ago)
+            time_limit = datetime.now() - timedelta(hours=6)
             print(f"\nFetching messages newer than: {time_limit.strftime('%Y-%m-%d %H:%M:%S')}")
             
             all_messages = []
@@ -220,9 +220,14 @@ class TelegramGroupFetcher:
                 
                 # Fetch messages
                 messages = await self.fetch_messages_from_group(group, group_name, time_limit)
+                
+                # Add group name to each message for identification
+                for msg in messages:
+                    msg['group_name'] = group_name
+                
                 all_messages.extend(messages)
             
-            # Sort messages by date (newest first)
+            # Sort all messages by date (newest first)
             all_messages.sort(key=lambda x: x['date'], reverse=True)
             
             # Display results
@@ -230,7 +235,7 @@ class TelegramGroupFetcher:
             print(f"SUMMARY")
             print(f"{'='*80}")
             print(f"Total messages found: {len(all_messages)}")
-            print(f"Time range: Last 6 hours from {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"Time range: Last 6 hours (from {time_limit.strftime('%Y-%m-%d %H:%M:%S')})")
             print(f"Groups processed: {len(group_names)}")
             
             if all_messages:
@@ -239,20 +244,30 @@ class TelegramGroupFetcher:
                 print(f"{'='*80}")
                 
                 for message in all_messages:
-                    print(self.format_message_output(message))
-                    print()  # Add spacing between messages
+                    print(self.format_message_output(message, message['group_name']))
+                    print()  # Empty line between messages
             else:
                 print("\nNo messages found in the specified time range.")
                 
         except Exception as e:
             print(f"Error during execution: {e}")
+        
         finally:
-            # Disconnect from Telegram
             if self.client:
                 await self.client.disconnect()
                 print("\nDisconnected from Telegram.")
 
-# Main execution
-if __name__ == "__main__":
+async def main():
+    """Entry point"""
     fetcher = TelegramGroupFetcher()
-    asyncio.run(fetcher.run())
+    await fetcher.run()
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\n\nOperation cancelled by user.")
+        sys.exit(0)
+    except Exception as e:
+        print(f"Fatal error: {e}")
+        sys.exit(1)

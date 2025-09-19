@@ -1,0 +1,14 @@
+# Telegram session files
+*.session
+
+# Environment files
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE
+.vscode/
+.idea/
