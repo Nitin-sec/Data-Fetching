@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Note: TDLib JAR must be manually added to project
+    // implementation files('td.jar')
+}
+
+application {
+    mainClass = 'org.telegram.fetcher.data_fetcher_test'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+}
+
+compileJava {
+    options.encoding = 'UTF-8'
+}
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'org.telegram.fetcher.data_fetcher_test'
+    }
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}

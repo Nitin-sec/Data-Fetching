@@ -1,0 +1,22 @@
+# TDLib native libraries and dependencies
+*.dll
+*.so
+*.dylib
+td.jar
+
+# TDLib database
+tdlib/
+
+# Java compiled files
+*.class
+*.jar
+!gradle-wrapper.jar
+
+# Build directories
+build/
+.gradle/
+
+# IDE files
+.idea/
+.vscode/
+*.iml
